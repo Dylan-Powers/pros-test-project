@@ -93,6 +93,9 @@ void opcontrol() {
 		int right_stick_y = master.get_analog(ANALOG_RIGHT_Y);
 		int left_button = master.get_digital(DIGITAL_L1);
 		int right_button = master.get_digital(DIGITAL_R1);
+		bool shouldBeReset = true;
+		int targetPosition = 0;
+		int error = 5;
 
 		left_motor_1 = left_stick_y;
 		left_motor_2 = -left_stick_y;
@@ -104,12 +107,18 @@ void opcontrol() {
 		right_motor_4 = -right_stick_y;
 
 		if (left_button) {
-			manipulator = 127;
+		    if (shouldBeReset) {
+				targetPosition = manipulator.get_position() + 200;
+				manipulator.move_absolute(targetPosition, 127);
+				shouldBeReset = false;
+			} else {
+				if ((manipulator.get_position() < targetPosition + error) && (manipulator.get_position() > targetPosition - error)) {
+					shouldBeReset = true;
+				}
+			}
 		} else if (right_button) {
-			manipulator = -127;
-		} else {
-			manipulator = 0;
-		}
+			manipulator.move_relative(-200, 127);
+		} 
 
 		pros::delay(20);
 	}
