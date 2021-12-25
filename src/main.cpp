@@ -106,19 +106,29 @@ void opcontrol() {
 		right_motor_3 = right_stick_y;
 		right_motor_4 = -right_stick_y;
 
+		// if (left_button) {
+		//     if (shouldBeReset) {
+		// 		targetPosition = manipulator.get_position() + 200;
+		// 		manipulator.move_absolute(targetPosition, 127);
+		// 		shouldBeReset = false;
+		// 	} else {
+		// 		if ((manipulator.get_position() < targetPosition + error) && (manipulator.get_position() > targetPosition - error)) {
+		// 			shouldBeReset = true;
+		// 		}
+		// 	}
+		// } else if (right_button) {
+		// 	manipulator.move_relative(-200, 127);
+		// } 
+
+		// Untested code
+		// Not technically position control, but it should put the manipulator in a "brake mode"
 		if (left_button) {
-		    if (shouldBeReset) {
-				targetPosition = manipulator.get_position() + 200;
-				manipulator.move_absolute(targetPosition, 127);
-				shouldBeReset = false;
-			} else {
-				if ((manipulator.get_position() < targetPosition + error) && (manipulator.get_position() > targetPosition - error)) {
-					shouldBeReset = true;
-				}
-			}
+			manipulator = 127;
 		} else if (right_button) {
-			manipulator.move_relative(-200, 127);
-		} 
+			manipulator = -127;
+		} else {
+			manipulator.move_relative(0, 0);
+		}
 
 		pros::delay(20);
 	}
