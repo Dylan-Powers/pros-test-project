@@ -82,8 +82,11 @@ void opcontrol() {
 	pros::Motor left_motor_1(5);
 	pros::Motor left_motor_2(6);
 	pros::Motor left_motor_3(7);
-	pros::Motor left_motor_4(8);
-	pros::Motor manipulator(9);
+	pros::Motor left_motor_4(8);	
+	pros::Motor mobile_goal_claw(9);
+	pros::Motor manipulator_left_wrist(10);
+	pros::Motor manipulator_right_wrist(11);
+	pros::ADIDigitalOut grabber_solenoid(8);
 
 	while (true) {
 		// pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -91,8 +94,16 @@ void opcontrol() {
 		//                  (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
 		int left_stick_y = master.get_analog(ANALOG_LEFT_Y);
 		int right_stick_y = master.get_analog(ANALOG_RIGHT_Y);
-		int left_button = master.get_digital(DIGITAL_L1);
-		int right_button = master.get_digital(DIGITAL_R1);
+		int left_button_1 = master.get_digital(DIGITAL_L1);
+		int left_button_2 = master.get_digital(DIGITAL_L2);
+		int right_button_1 = master.get_digital(DIGITAL_R1);
+		int right_button_2 = master.get_digital(DIGITAL_R2);
+		int up_button = master.get_digital(DIGITAL_UP);
+		int down_button = master.get_digital(DIGITAL_DOWN);
+		int a_button = master.get_digital(DIGITAL_A);
+		int b_button = master.get_digital(DIGITAL_B);
+
+		bool grabber_open = false;
 
 		left_motor_1 = left_stick_y;
 		left_motor_2 = -left_stick_y;
@@ -103,12 +114,34 @@ void opcontrol() {
 		right_motor_3 = right_stick_y;
 		right_motor_4 = -right_stick_y;
 
-		if (left_button) {
-			manipulator = 127;
-		} else if (right_button) {
-			manipulator = -127;
+		// Not technically position control, but it should put the manipulator in a "brake mode"
+		if (left_button_1) {
+			mobile_goal_claw = 127;
+		} else if (left_button_2) {
+			mobile_goal_claw = -127;
 		} else {
-			manipulator = 0;
+			mobile_goal_claw.move_relative(0, 0);
+		}
+
+		// TODO: mkae this a singel button to toggle between open and close
+		if (a_button) {
+			grabber_open = true;
+		}
+		if (b_button) {
+			grabber_open = false;
+		}
+
+		grabber_solenoid.set_value(!grabber_open);
+
+		if (right_button_1) {
+			manipulator_left_wrist = 127;
+			manipulator_right_wrist = -127;
+		} else if (right_button_2) {
+			manipulator_left_wrist = -127;
+			manipulator_right_wrist = 127;
+		} else {
+			manipulator_left_wrist.move_relative(0, 0);
+			manipulator_right_wrist.move_relative(0, 0);
 		}
 
 		pros::delay(20);
