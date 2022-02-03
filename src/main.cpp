@@ -84,8 +84,11 @@ void opcontrol() {
 	pros::Motor left_motor_3(7);
 	pros::Motor left_motor_4(8);	
 	pros::Motor mobile_goal_claw(9);
-	pros::Motor manipulator_left_wrist(10);
+	mobile_goal_claw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	pros::Motor manipulator_left_wrist(20);
+	manipulator_left_wrist.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	pros::Motor manipulator_right_wrist(11);
+	manipulator_right_wrist.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	pros::ADIDigitalOut grabber_solenoid(8);
 
 	while (true) {
@@ -103,7 +106,9 @@ void opcontrol() {
 		int a_button = master.get_digital(DIGITAL_A);
 		int b_button = master.get_digital(DIGITAL_B);
 
-		bool grabber_open = false;
+		bool grabber_open;
+		bool current_state = a_button;
+		bool previous_state;
 
 		left_motor_1 = left_stick_y;
 		left_motor_2 = -left_stick_y;
@@ -120,18 +125,24 @@ void opcontrol() {
 		} else if (left_button_2) {
 			mobile_goal_claw = -127;
 		} else {
-			mobile_goal_claw.move_relative(0, 0);
+			mobile_goal_claw.move_velocity(0);
 		}
 
-		// TODO: mkae this a singel button to toggle between open and close
-		if (a_button) {
-			grabber_open = true;
-		}
-		if (b_button) {
-			grabber_open = false;
+		if (current_state == 1 && previous_state == 0) {
+			grabber_open = !grabber_open;
 		}
 
-		grabber_solenoid.set_value(!grabber_open);
+		previous_state = current_state;
+
+		// TODO: make this a single button to toggle between open and close
+		// if (a_button) {
+		// 	grabber_open = true;
+		// }
+		// if (b_button) {
+		// 	grabber_open = false;
+		// }
+
+		grabber_solenoid.set_value(grabber_open);
 
 		if (right_button_1) {
 			manipulator_left_wrist = 127;
@@ -140,8 +151,8 @@ void opcontrol() {
 			manipulator_left_wrist = -127;
 			manipulator_right_wrist = 127;
 		} else {
-			manipulator_left_wrist.move_relative(0, 0);
-			manipulator_right_wrist.move_relative(0, 0);
+			manipulator_left_wrist.move_velocity(0);
+			manipulator_right_wrist.move_velocity(0);
 		}
 
 		pros::delay(20);
