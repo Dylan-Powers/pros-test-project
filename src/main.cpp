@@ -1,5 +1,23 @@
 #include "main.h"
 
+
+
+pros::Controller master(pros::E_CONTROLLER_MASTER);
+pros::Motor right_motor_1(1);
+pros::Motor right_motor_2(18);
+pros::Motor right_motor_3(16);
+pros::Motor right_motor_4(3);
+pros::Motor left_motor_1(5);
+pros::Motor left_motor_2(17);
+pros::Motor left_motor_3(2);
+pros::Motor left_motor_4(4);
+pros::Motor four_bar_left(8);
+pros::Motor four_bar_right(19);
+pros::ADIDigitalOut front_claw_solenoid(1);
+pros::ADIDigitalOut back_claw_solenoid(2);
+
+
+
 /**
  * A callback function for LLEMU's center button.
  *
@@ -27,6 +45,9 @@ void initialize() {
 	pros::lcd::set_text(1, "Hello PROS User!");
 
 	pros::lcd::register_btn1_cb(on_center_button);
+
+	four_bar_left.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	four_bar_right.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 }
 
 /**
@@ -74,22 +95,6 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor right_motor_1(1);
-	pros::Motor right_motor_2(2);
-	pros::Motor right_motor_3(3);
-	pros::Motor right_motor_4(4);
-	pros::Motor left_motor_1(5);
-	pros::Motor left_motor_2(6);
-	pros::Motor left_motor_3(7);
-	pros::Motor left_motor_4(8);	
-	pros::Motor mobile_goal_claw(9);
-	mobile_goal_claw.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	pros::Motor manipulator_left_wrist(20);
-	manipulator_left_wrist.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	pros::Motor manipulator_right_wrist(11);
-	manipulator_right_wrist.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-	pros::ADIDigitalOut grabber_solenoid(8);
 
 	while (true) {
 		// pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
@@ -105,10 +110,14 @@ void opcontrol() {
 		int down_button = master.get_digital(DIGITAL_DOWN);
 		int a_button = master.get_digital(DIGITAL_A);
 		int b_button = master.get_digital(DIGITAL_B);
+		int l1_button = master.get_digital(DIGITAL_L1);
 
-		bool grabber_open;
-		bool current_state = a_button;
-		bool previous_state;
+		bool front_claw_open;
+		bool back_claw_open;
+		bool l1_current_state = l1_button;
+		bool l1_previous_state;
+		bool a_current_state = a_button;
+		bool a_previous_state;
 
 		left_motor_1 = left_stick_y;
 		left_motor_2 = -left_stick_y;
@@ -119,40 +128,29 @@ void opcontrol() {
 		right_motor_3 = right_stick_y;
 		right_motor_4 = -right_stick_y;
 
-		// Not technically position control, but it should put the manipulator in a "brake mode"
-		if (left_button_1) {
-			mobile_goal_claw = 127;
-		} else if (left_button_2) {
-			mobile_goal_claw = -127;
-		} else {
-			mobile_goal_claw.move_velocity(0);
+		if (l1_current_state == 1 && l1_previous_state == 0) {
+			front_claw_open = !front_claw_open;
 		}
 
-		if (current_state == 1 && previous_state == 0) {
-			grabber_open = !grabber_open;
+		if (a_current_state == 1 && a_previous_state == 0) {
+			back_claw_open = !back_claw_open;
 		}
 
-		previous_state = current_state;
+		l1_previous_state = l1_current_state;
+		a_previous_state = a_current_state;
 
-		// TODO: make this a single button to toggle between open and close
-		// if (a_button) {
-		// 	grabber_open = true;
-		// }
-		// if (b_button) {
-		// 	grabber_open = false;
-		// }
-
-		grabber_solenoid.set_value(grabber_open);
+		front_claw_solenoid.set_value(front_claw_open);
+		back_claw_solenoid.set_value(back_claw_open);
 
 		if (right_button_1) {
-			manipulator_left_wrist = 127;
-			manipulator_right_wrist = -127;
+			four_bar_left = 127;
+			four_bar_right = -127;
 		} else if (right_button_2) {
-			manipulator_left_wrist = -127;
-			manipulator_right_wrist = 127;
+			four_bar_left = -127;
+			four_bar_right = 127;
 		} else {
-			manipulator_left_wrist.move_velocity(0);
-			manipulator_right_wrist.move_velocity(0);
+			four_bar_left.move_velocity(0);
+			four_bar_right.move_velocity(0);
 		}
 
 		pros::delay(20);
