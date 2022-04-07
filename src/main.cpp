@@ -3,25 +3,20 @@
 
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::Motor right_motor_1(5);
-pros::Motor right_motor_2(6);
-pros::Motor right_motor_3(7);
-pros::Motor right_motor_4(8);
-pros::Motor left_motor_1(1);
-pros::Motor left_motor_2(2);
-pros::Motor left_motor_3(3);
-pros::Motor left_motor_4(4);
+pros::Motor right_front_top_drive(5);
+pros::Motor right_front_bottom_drive(6);
+pros::Motor right_back_top_drive(7);
+pros::Motor right_back_bottom_drive(8);
+pros::Motor left_front_top_drive(1);
+pros::Motor left_front_bottom_drive(2);
+pros::Motor left_back_top_drive(3);
+pros::Motor left_back_bottom_drive(4);
 pros::Motor four_bar_left(10);
 pros::Motor four_bar_right(15);
-pros::ADIDigitalOut right_claw_piston(3);
-pros::ADIDigitalOut left_claw_piston(1);
-pros::ADIDigitalOut back_claw_piston(2);
-pros::ADIDigitalOut pivot_claw_piston(4);
-
-	// right_claw_piston = new ADIDigitalOutNode(node_manager, "primary_claw_piston", 3, false);
-	// left_claw_piston = new ADIDigitalOutNode(node_manager, "secondary_claw_piston", 1, false);
-	// back_claw_piston = new ADIDigitalOutNode(node_manager, "back_claw_piston", 2, false);
-	// pivot_claw_piston = new ADIDigitalOutNode(node_manager, "pivot_claw_piston", 4, false);
+pros::Motor ring_manipulator(9);
+pros::ADIDigitalOut lift_claw_solenoid(2);
+pros::ADIDigitalOut back_claw_solenoid(4);
+pros::ADIDigitalOut back_claw_tilt_solenoid(1);
 
 int left_motor_1_speed = 0;
 int left_motor_2_speed = 0;
@@ -32,7 +27,7 @@ int right_motor_2_speed = 0;
 int right_motor_3_speed = 0;
 int right_motor_4_speed = 0;
 
-int max_min_speed(int speed) {
+int limit_speed(int speed) {
 	if (speed > 127) {
 		return 127;
 	} else if (speed < -127) {
@@ -163,32 +158,11 @@ void opcontrol() {
 		// right_claw_piston.set_value(front_claw_open);
 		// left_claw_piston.set_value(back_claw_open);
 
-		if (x_button) {
-			right_claw_piston.set_value(1);
-		}
-		if (a_button) {
-			right_claw_piston.set_value(0);
-		}
-
-		if (left_d_button) {
-			left_claw_piston.set_value(0);
-		}
-		if (up_button) {
-			left_claw_piston.set_value(1);
-		}
-
 		if (down_button) {
-			back_claw_piston.set_value(1);
+			lift_claw_solenoid.set_value(1);
 		}
 		if (right_d_button) {
-			back_claw_piston.set_value(0);
-		}
-
-		if (y_button) {
-			pivot_claw_piston.set_value(0);
-		}
-		if (b_button) {
-			pivot_claw_piston.set_value(1);
+			lift_claw_solenoid.set_value(0);
 		}
 
 		if (right_button_1) {
@@ -207,34 +181,42 @@ void opcontrol() {
 			four_bar_left.move_velocity(0);
 		}
 
+		if (a_button) {
+			ring_manipulator = 127;
+		} else if (b_button) {
+			ring_manipulator = -127;
+		} else {
+			ring_manipulator.move_velocity(0);
+		}
+
 		// Tank Drive
-		// left_motor_1 = left_stick_y;
-		// left_motor_2 = -left_stick_y;
-		// left_motor_3 = -left_stick_y;
-		// left_motor_4 = left_stick_y;
-		// right_motor_1 = -right_stick_y;
-		// right_motor_2 = right_stick_y;
-		// right_motor_3 = right_stick_y;
-		// right_motor_4 = -right_stick_y;
+		// left_front_top_drive = left_stick_y;
+		// left_front_bottom_drive = -left_stick_y;
+		// left_back_top_drive = -left_stick_y;
+		// left_back_bottom_drive = left_stick_y;
+		// right_front_top_drive = -right_stick_y;
+		// right_front_bottom_drive= right_stick_y;
+		// right_back_top_drive = right_stick_y;
+		// right_back_bottom_drive = -right_stick_y;
 
 		// Split Arcade Drive
 		left_motor_1_speed = left_stick_y + right_stick_x;
-		left_motor_2_speed = -(left_stick_y + right_stick_x);
-		left_motor_3_speed = -(left_stick_y + right_stick_x);
+		left_motor_2_speed = left_stick_y + right_stick_x;
+		left_motor_3_speed = left_stick_y + right_stick_x;
 		left_motor_4_speed = left_stick_y + right_stick_x;
-		right_motor_1_speed = -(left_stick_y - right_stick_x);
+		right_motor_1_speed = left_stick_y - right_stick_x;
 		right_motor_2_speed = left_stick_y - right_stick_x;
 		right_motor_3_speed = left_stick_y - right_stick_x;
-		right_motor_4_speed = -(left_stick_y - right_stick_x);
+		right_motor_4_speed = left_stick_y - right_stick_x;
 
-		// left_motor_1 = max_min_speed(left_motor_1_speed);
-		// left_motor_2 = max_min_speed(left_motor_2_speed);
-		// left_motor_3 = max_min_speed(left_motor_3_speed);
-		// left_motor_4 = max_min_speed(left_motor_4_speed);
-		// right_motor_1 = max_min_speed(right_motor_1_speed);
-		// right_motor_2 = max_min_speed(right_motor_2_speed);
-		// right_motor_3 = max_min_speed(right_motor_3_speed);
-		// right_motor_4 = max_min_speed(right_motor_4_speed);
+		left_front_top_drive = limit_speed(left_motor_1_speed);
+		left_front_bottom_drive = limit_speed(left_motor_2_speed);
+		left_back_top_drive = limit_speed(left_motor_3_speed);
+		left_back_bottom_drive = limit_speed(left_motor_4_speed);
+		right_front_top_drive = limit_speed(right_motor_1_speed);
+		right_front_bottom_drive= limit_speed(right_motor_2_speed);
+		right_back_top_drive = limit_speed(right_motor_3_speed);
+		right_back_bottom_drive = limit_speed(right_motor_4_speed);
 
 		// Arcade Drive
 		// left_motor_1_speed = left_stick_y + left_stick_x;
@@ -246,14 +228,14 @@ void opcontrol() {
 		// right_motor_3_speed = left_stick_y - left_stick_x;
 		// right_motor_4_speed = -(left_stick_y - left_stick_x);
 
-		// left_motor_1 = max_min_speed(left_motor_1_speed);
-		// left_motor_2 = max_min_speed(left_motor_2_speed);
-		// left_motor_3 = max_min_speed(left_motor_3_speed);
-		// left_motor_4 = max_min_speed(left_motor_4_speed);
-		// right_motor_1 = max_min_speed(right_motor_1_speed);
-		// right_motor_2 = max_min_speed(right_motor_2_speed);
-		// right_motor_3 = max_min_speed(right_motor_3_speed);
-		// right_motor_4 = max_min_speed(right_motor_4_speed);
+		// left_front_top_drive = limit_speed(left_motor_1_speed);
+		// left_front_bottom_drive = limit_speed(left_motor_2_speed);
+		// left_back_top_drive = limit_speed(left_motor_3_speed);
+		// left_back_bottom_drive = limit_speed(left_motor_4_speed);
+		// right_front_top_drive = limit_speed(right_motor_1_speed);
+		// right_front_bottom_drive= limit_speed(right_motor_2_speed);
+		// right_back_top_drive = limit_speed(right_motor_3_speed);
+		// right_back_bottom_drive = limit_speed(right_motor_4_speed);
 
 		pros::delay(20);
 	}
