@@ -3,16 +3,16 @@
 
 
 pros::Controller master(pros::E_CONTROLLER_MASTER);
-pros::Motor right_front_top_drive(5);
-pros::Motor right_front_bottom_drive(6);
-pros::Motor right_back_top_drive(7);
-pros::Motor right_back_bottom_drive(8);
-pros::Motor left_front_top_drive(1);
-pros::Motor left_front_bottom_drive(2);
-pros::Motor left_back_top_drive(3);
-pros::Motor left_back_bottom_drive(4);
-pros::Motor four_bar_left(10);
-pros::Motor four_bar_right(15);
+pros::Motor right_front_top_drive(16);
+pros::Motor right_front_bottom_drive(15);
+pros::Motor right_back_top_drive(12);
+pros::Motor right_back_bottom_drive(1);
+pros::Motor left_front_top_drive(19);
+pros::Motor left_front_bottom_drive(20);
+pros::Motor left_back_top_drive(14);
+pros::Motor left_back_bottom_drive(13);
+pros::Motor four_bar_left(18);
+pros::Motor four_bar_right(17);
 pros::Motor ring_manipulator(9);
 pros::ADIDigitalOut lift_claw_solenoid(2);
 pros::ADIDigitalOut back_claw_solenoid(4);
@@ -165,25 +165,28 @@ void opcontrol() {
 			lift_claw_solenoid.set_value(0);
 		}
 
-		if (right_button_1) {
+		if (right_button_2) {
 			four_bar_right = 127;
-		} else if (right_button_2) {
-			four_bar_right = -127;
-		} else {
-			four_bar_right.move_velocity(0);
-		}
-
-		if (left_button_1) {
 			four_bar_left = -127;
-		} else if (left_button_2) {
+		} else if (right_button_1) {
+			four_bar_right = -127;
 			four_bar_left = 127;
 		} else {
+			four_bar_right.move_velocity(0);
 			four_bar_left.move_velocity(0);
 		}
 
-		if (a_button) {
+		// if (left_button_1) {
+		// 	four_bar_left = -127;
+		// } else if (left_button_2) {
+		// 	four_bar_left = 127;
+		// } else {
+		// 	four_bar_left.move_velocity(0);
+		// }
+
+		if (left_button_1) {
 			ring_manipulator = 127;
-		} else if (b_button) {
+		} else if (left_button_2) {
 			ring_manipulator = -127;
 		} else {
 			ring_manipulator.move_velocity(0);
@@ -210,12 +213,12 @@ void opcontrol() {
 		right_motor_4_speed = left_stick_y - right_stick_x;
 
 		left_front_top_drive = limit_speed(left_motor_1_speed);
-		left_front_bottom_drive = limit_speed(left_motor_2_speed);
+		left_front_bottom_drive = -limit_speed(left_motor_2_speed);
 		left_back_top_drive = limit_speed(left_motor_3_speed);
-		left_back_bottom_drive = limit_speed(left_motor_4_speed);
-		right_front_top_drive = limit_speed(right_motor_1_speed);
+		left_back_bottom_drive = -limit_speed(left_motor_4_speed);
+		right_front_top_drive = -limit_speed(right_motor_1_speed);
 		right_front_bottom_drive= limit_speed(right_motor_2_speed);
-		right_back_top_drive = limit_speed(right_motor_3_speed);
+		right_back_top_drive = -limit_speed(right_motor_3_speed);
 		right_back_bottom_drive = limit_speed(right_motor_4_speed);
 
 		// Arcade Drive
